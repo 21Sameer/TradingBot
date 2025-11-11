@@ -739,7 +739,7 @@
       const saveBtn = document.getElementById('save-api');
       const statusPill = document.getElementById('status-pill');
 
-      const API_BASE = (localStorage.getItem('API_BASE') || 'http://localhost:8000').replace(/\/+$/, '');
+      const API_BASE = (localStorage.getItem('API_BASE') || 'http://127.0.0.1:8080').replace(/\/+$/, '');
       apiInput.value = API_BASE;
 
       saveBtn.addEventListener('click', () => {
@@ -772,7 +772,7 @@
         runResult.textContent = "";
         
         try {
-          const res = await fetch("http://127.0.0.1:8000/analyze_all", {
+          const res = await fetch("http://127.0.0.1:8080/analyze_all", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ symbols }),
@@ -798,7 +798,7 @@
             if (decision.toUpperCase() === "BUY") {
               buySymbols.push(sym);
               try {
-                const tradeRes = await fetch("http://127.0.0.1:8000/start_trade", {
+                const tradeRes = await fetch("http://127.0.0.1:8080/start_trade", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ symbol: sym }),
@@ -1348,7 +1348,7 @@
       document.head.appendChild(style);
       
         //yahan sa change kia end script tak
-      const API_URL = "http://127.0.0.1:8000/trade_history"; // ✅ Your working backend URL
+      const API_URL = "http://127.0.0.1:8080/trade_history"; // ✅ Your working backend URL
       
       // ADD THIS FUNCTION HERE (right before loadTradeHistory)
       function formatPrice(price) {
@@ -1426,7 +1426,7 @@
           let currentBalance = 0;
           let startingBalance = null;
           try {
-            const balanceRes = await fetch("http://127.0.0.1:8000/balance");
+            const balanceRes = await fetch("http://127.0.0.1:8080/balance");
             const balanceData = await balanceRes.json();
             currentBalance = Number(balanceData.balance || 0);
             startingBalance = balanceData.starting_balance !== undefined ? Number(balanceData.starting_balance) : null;
