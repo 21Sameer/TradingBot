@@ -143,6 +143,8 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://127.0.0.1:8080",
+        "http://localhost:8080",
         "http://127.0.0.1:5500",
         "http://localhost:5500",
         "http://127.0.0.1:3000",
@@ -679,6 +681,16 @@ def get_trade_history(limit: int = None):
     except Exception as e:
         return {'ok': False, 'error': str(e)}
 
+
+
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+
+
+
