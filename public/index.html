@@ -1,0 +1,1529 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Crypto Paper Trading — Dashboard</title>
+    <style>
+      :root{
+        /* Premium color system with glows */
+        --bg:#0a0e13;
+        --bg-gradient:radial-gradient(ellipse at top, #1a1f2e 0%, #0a0e13 50%);
+        --card:#12171d;
+        --card-hover:#161c23;
+        --fg:#f1f5f9;
+        --brand:#fbbf24;
+        --brand-light:#fcd34d;
+        --brand-glow:rgba(251,191,36,0.25);
+        --pos:#10b981;
+        --pos-glow:rgba(16,185,129,0.25);
+        --neg:#f43f5e;
+        --neg-glow:rgba(244,63,94,0.25);
+        --muted:#94a3b8;
+        --border:#1e293b;
+        --radius:16px;
+        --shadow-sm:0 2px 8px rgba(0,0,0,0.3);
+        --shadow-md:0 4px 16px rgba(0,0,0,0.4);
+        --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+        --shadow-glow:0 0 30px rgba(251,191,36,0.15);
+      }
+      
+      *{box-sizing:border-box;margin:0;padding:0}
+      
+      html,body{height:100%}
+      
+      body{
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+        background: var(--bg);
+        background-image: var(--bg-gradient);
+        color:var(--fg);
+        line-height:1.6;
+        overflow-x:hidden;
+        position:relative;
+      }
+      
+      /* Animated background particles */
+      body::before{
+        content:'';
+        position:fixed;
+        top:0;left:0;right:0;bottom:0;
+        background:
+          radial-gradient(circle at 20% 50%, rgba(251,191,36,0.03) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(16,185,129,0.03) 0%, transparent 50%),
+          radial-gradient(circle at 40% 80%, rgba(244,63,94,0.03) 0%, transparent 50%);
+        pointer-events:none;
+        z-index:0;
+        animation: pulse 15s ease-in-out infinite;
+      }
+      
+      @keyframes pulse{
+        0%, 100%{opacity:0.5}
+        50%{opacity:1}
+      }
+      
+      a{color:var(--brand);text-decoration:none;transition:color 0.3s}
+      a:hover{color:var(--brand-light)}
+      
+      .wrap{
+        min-height:100%;
+        display:flex;
+        flex-direction:column;
+        position:relative;
+        z-index:1;
+      }
+      
+      /* Enhanced header with glassmorphism */
+      header{
+        border-bottom:1px solid var(--border);
+        position:sticky;
+        top:0;
+        background:rgba(18,23,29,0.95);
+        backdrop-filter: blur(16px) saturate(180%);
+        z-index:100;
+        box-shadow:var(--shadow-md);
+      }
+      
+      .container{
+        max-width:1400px;
+        margin-inline:auto;
+        padding:20px;
+      }
+      
+      .topbar{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:20px;
+        flex-wrap:wrap;
+      }
+      
+      .brand{
+        display:flex;
+        align-items:center;
+        gap:14px;
+      }
+      
+      /* Premium animated logo */
+      .logo{
+        width:40px;
+        height:40px;
+        border-radius:12px;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        box-shadow: 0 4px 16px var(--brand-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+        position:relative;
+        overflow:hidden;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+      
+      .logo::before{
+        content:'₿';
+        font-size:24px;
+        font-weight:bold;
+        color:#0a0e13;
+        z-index:2;
+        position:relative;
+      }
+      
+      .logo::after{
+        content:'';
+        position:absolute;
+        top:-50%;
+        left:-50%;
+        width:200%;
+        height:200%;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+        animation: shimmer 3s infinite;
+      }
+      
+      @keyframes shimmer{
+        0%{transform:translateX(-100%) translateY(-100%) rotate(45deg)}
+        100%{transform:translateX(100%) translateY(100%) rotate(45deg)}
+      }
+      
+      .title{
+        font-weight:800;
+        font-size:22px;
+        letter-spacing:-.02em;
+        background:linear-gradient(135deg, var(--fg) 0%, var(--muted) 100%);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+      }
+      
+      .subtitle{
+        font-size:13px;
+        color:var(--muted);
+        display:flex;
+        align-items:center;
+        gap:6px;
+      }
+      
+      .subtitle::before{
+        content:'●';
+        color:var(--pos);
+        animation: blink 2s infinite;
+      }
+      
+      @keyframes blink{
+        0%, 50%, 100%{opacity:1}
+        25%, 75%{opacity:0.3}
+      }
+      
+      .muted{color:var(--muted)}
+      
+      /* Enhanced pill with glow */
+      .pill{
+        border:1px solid var(--border);
+        background:linear-gradient(135deg, var(--card) 0%, rgba(30,41,59,0.5) 100%);
+        border-radius:999px;
+        padding:10px 16px;
+        color:var(--fg);
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        font-size:13px;
+        font-weight:600;
+        box-shadow:var(--shadow-sm);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .pill:hover{
+        transform:translateY(-2px);
+        box-shadow:var(--shadow-md);
+        border-color:var(--brand);
+      }
+      
+      .pill.success{
+        background:linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%);
+        border-color:rgba(16,185,129,0.3);
+        color:var(--pos);
+        box-shadow:0 0 20px var(--pos-glow);
+      }
+      
+      /* Premium inputs */
+      .input{
+        background:rgba(15,20,27,0.8);
+        border:1px solid var(--border);
+        color:var(--fg);
+        padding:12px 16px;
+        border-radius:12px;
+        min-width:280px;
+        font-size:14px;
+        transition: all 0.3s ease;
+        box-shadow:inset 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      .input:focus{
+        outline:none;
+        border-color:var(--brand);
+        box-shadow:0 0 0 4px var(--brand-glow), inset 0 2px 4px rgba(0,0,0,0.3);
+        transform:translateY(-1px);
+      }
+      
+      .input::placeholder{
+        color:var(--muted);
+        opacity:0.6;
+      }
+      
+      main{flex:1;position:relative}
+      
+      .grid{
+        display:grid;
+        gap:20px;
+        grid-template-columns: 1fr;
+        padding:20px;
+      }
+      
+      @media(min-width:1024px){
+        .grid{grid-template-columns: 1.3fr 1.5fr 0.9fr}
+      }
+      
+      /* Premium panels with depth */
+      .panel{
+        background:linear-gradient(135deg, var(--card) 0%, rgba(18,23,29,0.8) 100%);
+        border:1px solid var(--border);
+        border-radius:var(--radius);
+        padding:24px;
+        box-shadow:var(--shadow-md);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position:relative;
+        overflow:hidden;
+      }
+      
+      .panel::before{
+        content:'';
+        position:absolute;
+        top:0;
+        left:0;
+        right:0;
+        height:3px;
+        background:linear-gradient(90deg, transparent 0%, var(--brand) 50%, transparent 100%);
+        opacity:0.4;
+      }
+      
+      .panel:hover{
+        transform:translateY(-4px);
+        box-shadow:var(--shadow-lg), var(--shadow-glow);
+        border-color:rgba(251,191,36,0.3);
+      }
+      
+      .panel h2{
+        margin:0 0 16px;
+        font-size:13px;
+        text-transform:uppercase;
+        letter-spacing:.18em;
+        color:var(--brand);
+        font-weight:700;
+        display:flex;
+        align-items:center;
+        gap:10px;
+      }
+      
+      .panel h2::before{
+        content:'';
+        width:4px;
+        height:16px;
+        background:var(--brand);
+        border-radius:2px;
+        box-shadow:0 0 10px var(--brand-glow);
+      }
+      
+      .prices-list{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+      
+      /* Enhanced price rows */
+      .row{
+        display:grid;
+        grid-template-columns: 120px 1fr 1fr 70px;
+        gap:14px;
+        align-items:center;
+        padding:14px;
+        border:1px solid var(--border);
+        border-radius:14px;
+        background:linear-gradient(135deg, rgba(15,20,26,0.6) 0%, rgba(30,41,59,0.3) 100%);
+        transition: all 0.3s ease;
+        position:relative;
+      }
+      
+      .row::after{
+        content:'';
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0;
+        width:0;
+        background:linear-gradient(90deg, var(--brand-glow), transparent);
+        transition:width 0.3s ease;
+      }
+      
+      .row:hover{
+        background:linear-gradient(135deg, rgba(15,20,26,0.9) 0%, rgba(30,41,59,0.5) 100%);
+        border-color:rgba(251,191,36,0.4);
+        transform:translateX(6px);
+        box-shadow:var(--shadow-md);
+      }
+      
+      .row:hover::after{
+        width:4px;
+      }
+      
+      .ticker{
+        font-weight:700;
+        font-size:16px;
+        letter-spacing:-.01em;
+      }
+      
+      .diff-pos{
+        color:var(--pos);
+        font-weight:700;
+        text-shadow:0 0 10px var(--pos-glow);
+      }
+      
+      .diff-neg{
+        color:var(--neg);
+        font-weight:700;
+        text-shadow:0 0 10px var(--neg-glow);
+      }
+      
+      /* Enhanced sparkline canvas */
+      .mini{
+        width:100%;
+        height:40px;
+        background:rgba(11,17,23,0.6);
+        border:1px solid var(--border);
+        border-radius:10px;
+        box-shadow:inset 0 2px 4px rgba(0,0,0,0.4);
+        grid-column:1 / -1;
+      }
+      
+      .kpi{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        flex-wrap:wrap;
+      }
+      
+      .kpi .value{font-weight:700}
+      
+      /* Premium table */
+      .table{
+        width:100%;
+        border-collapse:separate;
+        border-spacing:0 10px;
+      }
+      
+      .table thead th{
+        text-align:left;
+        font-size:11px;
+        color:var(--muted);
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        padding:0 10px 8px;
+      }
+      
+      .table tbody tr{
+        background:linear-gradient(135deg, rgba(15,20,26,0.6) 0%, rgba(30,41,59,0.3) 100%);
+        border:1px solid var(--border);
+        transition: all 0.3s ease;
+      }
+      
+      .table tbody tr:hover{
+        background:linear-gradient(135deg, rgba(15,20,26,0.9) 0%, rgba(30,41,59,0.5) 100%);
+        transform:scale(1.01);
+        box-shadow:var(--shadow-md);
+      }
+      
+      .table tbody td{
+        padding:14px 10px;
+        border-top:1px solid var(--border);
+        border-bottom:1px solid var(--border);
+      }
+      
+      .table tbody tr td:first-child{
+        border-left:1px solid var(--border);
+        border-top-left-radius:12px;
+        border-bottom-left-radius:12px;
+      }
+      
+      .table tbody tr td:last-child{
+        border-right:1px solid var(--border);
+        border-top-right-radius:12px;
+        border-bottom-right-radius:12px;
+      }
+      
+      /* Enhanced badges */
+      .badge{
+        padding:6px 14px;
+        border-radius:999px;
+        font-size:11px;
+        border:1px solid;
+        font-weight:700;
+        letter-spacing:.04em;
+        text-transform:uppercase;
+        transition: all 0.3s ease;
+        display:inline-block;
+      }
+      
+      .buy{
+        background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%);
+        color:var(--pos);
+        border-color:rgba(16,185,129,0.4);
+        box-shadow:0 0 15px var(--pos-glow);
+      }
+      
+      .sell{
+        background: linear-gradient(135deg, rgba(244,63,94,0.2) 0%, rgba(244,63,94,0.1) 100%);
+        color:var(--neg);
+        border-color:rgba(244,63,94,0.4);
+        box-shadow:0 0 15px var(--neg-glow);
+      }
+      
+      .right{
+        display:flex;
+        flex-direction:column;
+        gap:20px;
+      }
+      
+      /* Stunning balance display */
+      .balance{
+        font-size:42px;
+        font-weight:900;
+        background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
+        background-size:200% auto;
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+        letter-spacing:-.03em;
+        animation: shimmer-text 3s linear infinite;
+        filter:drop-shadow(0 0 20px var(--brand-glow));
+      }
+      
+      @keyframes shimmer-text{
+        to{background-position:200% center}
+      }
+      
+      .ts{
+        font-size:12px;
+        color:var(--muted);
+        margin-bottom:8px;
+      }
+      
+      footer{
+        border-top:1px solid var(--border);
+        background:rgba(18,23,29,0.8);
+        backdrop-filter:blur(12px);
+      }
+      
+      .help{
+        font-size:12px;
+        color:var(--muted);
+      }
+      
+      .split{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:8px;
+      }
+      
+      .legend{
+        display:flex;
+        align-items:center;
+        gap:12px;
+      }
+      
+      .dot{
+        width:10px;
+        height:10px;
+        border-radius:50%;
+        box-shadow:0 0 10px currentColor;
+      }
+      
+      .dot.pos{background:var(--pos);color:var(--pos)}
+      .dot.neg{background:var(--neg);color:var(--neg)}
+      .dot.brand{background:var(--brand);color:var(--brand)}
+      
+      .error{color:var(--neg);font-size:13px;margin:4px 0}
+      .success{color:var(--pos);font-size:13px;margin:4px 0}
+      
+      .section-actions{
+        display:flex;
+        gap:10px;
+        align-items:center;
+      }
+      
+      /* Premium button with advanced effects */
+      button.btn{
+        background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color:#0a0e13;
+        border:none;
+        border-radius:12px;
+        padding:12px 20px;
+        font-weight:700;
+        cursor:pointer;
+        font-size:14px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow:0 4px 14px var(--brand-glow);
+        position:relative;
+        overflow:hidden;
+        text-transform:uppercase;
+        letter-spacing:.05em;
+      }
+      
+      button.btn::before{
+        content:'';
+        position:absolute;
+        top:0;
+        left:-100%;
+        width:100%;
+        height:100%;
+        background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.5s;
+      }
+      
+      button.btn:hover{
+        transform:translateY(-3px);
+        box-shadow:0 6px 24px rgba(251,191,36,0.5);
+      }
+      
+      button.btn:hover::before{
+        left:100%;
+      }
+      
+      button.btn:active{
+        transform:translateY(-1px);
+      }
+      
+      button.btn:disabled{
+        opacity:.5;
+        cursor:not-allowed;
+        transform:none;
+      }
+      
+      .mono{
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+      }
+      
+      .sr-only{
+        position:absolute;
+        width:1px;
+        height:1px;
+        margin:-1px;
+        padding:0;
+        overflow:hidden;
+        clip:rect(0 0 0 0);
+        white-space:nowrap;
+        border:0;
+      }
+      
+      /* Toast notifications */
+      #notif-root{
+        position:fixed;
+        right:20px;
+        top:80px;
+        z-index:9999;
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+      }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+        .container {padding: 12px}
+        .topbar {flex-direction: column;align-items: flex-start;gap: 14px}
+        .grid {grid-template-columns: 1fr;padding: 12px}
+        .panel {padding: 16px}
+        .balance{font-size:32px}
+        table.table {font-size: 12px}
+        table.table thead {display: none}
+        table.table, table.table tbody, table.table tr, table.table td {
+          display: block;width: 100%
+        }
+        table.table tr {margin-bottom: 12px;border-radius: 12px;overflow: hidden}
+        table.table td {
+          padding: 10px 12px;border: none;border-bottom: 1px solid var(--border);
+          text-align: right;position: relative
+        }
+        table.table td::before {
+          content: attr(data-label);position: absolute;left: 12px;
+          text-transform: uppercase;font-size: 10px;color: var(--muted)
+        }
+        .kpi {flex-direction: column;align-items: flex-start}
+        .right {order: -1}
+        input.input {min-width: 100%}
+        .row{grid-template-columns:1fr 1fr;gap:10px}
+        .row .ticker{grid-column:1/-1}
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="container topbar" role="banner">
+          <div class="brand">
+            <div class="logo" aria-hidden="true"></div>
+            <div>
+              <div class="title">Crypto Paper Trading</div>
+              <div class="subtitle">Auto-refresh every 5s</div>
+            </div>
+          </div>
+          <div class="kpi" role="group" aria-label="Settings">
+            <label class="sr-only" for="api-base">API Base</label>
+            <input id="api-base" class="input mono" placeholder="http://localhost:8000" />
+            <button class="btn" id="save-api">Save</button>
+            <span class="pill" id="status-pill" aria-live="polite">Connecting…</span>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <div class="grid container" role="main">
+          <!-- Prices -->
+          <section class="panel" aria-labelledby="prices-title">
+            <div class="split">
+              <h2 id="prices-title">Live Prices</h2>
+              <div class="legend">
+                <span class="dot brand"></span><span class="muted" style="font-size:12px">Backend</span>
+                <span class="dot pos"></span><span class="muted" style="font-size:12px">Binance</span>
+              </div>
+            </div>
+            <div class="ts" id="ts-prices">Last update: —</div>
+            <div id="prices" class="prices-list" aria-live="polite"></div>
+          </section>
+
+          <!-- Trades Table -->
+          <section class="panel" aria-labelledby="trades-title">
+            <div class="split">
+              <h2 id="trades-title">Open Trades</h2>
+              <div class="section-actions">
+                <span class="pill" id="open-count">0 open</span>
+              </div>
+            </div>
+            <div class="ts" id="ts-trades">Last update: —</div>
+            <div style="overflow:auto">
+              <table class="table" aria-describedby="trades-title">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Entry</th>
+                    <th>Target</th>
+                    <th>Stop Loss</th>
+                    <th>Amount</th>
+                    <th>Price</th>
+                    <th>P/L</th>
+                    <th>P/L %</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="trades-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Right column -->
+          <aside class="right">
+            <section class="panel" aria-labelledby="balance-title">
+              <h2 id="balance-title">Balance</h2>
+              <div class="ts" id="ts-balance">Last update: —</div>
+              <div class="balance" id="balance">$0.00</div>
+            </section>
+
+            <section class="panel" aria-labelledby="start-title">
+              <h2 id="start-title">Run AI for Symbol</h2>
+              <div class="ts">Type a Binance symbol (e.g. BTCUSDT) and run the AI once.</div>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+                <input id="input-symbol" class="input mono" placeholder="BTCUSDT" />
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                  <button class="btn" id="btn-analyze">Analyze</button>
+                  <button id="analyzeAllBtn" class="btn btn-primary">Analyze All</button>
+                  <button class="btn" id="fetchLiveSignalsBtn">Fetch Live Signals</button>
+                  <button class="btn" id="btn-start-trade">Start Trade</button>
+                  <div id="run-msg" class="muted" style="font-size:13px"></div>
+                </div>
+                <pre id="run-result" style="white-space:pre-wrap;color:var(--muted);font-size:13px;max-height:300px;overflow:auto"></pre>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="ai-title">
+              <h2 id="ai-title">AI Decisions</h2>
+              <div class="ts" id="ts-ai">Last update: —</div>
+              <div id="ai" style="display:flex;flex-direction:column;gap:10px"></div>
+            </section>
+          </aside>
+        </div>
+      </main>
+
+      <footer>
+        <div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;flex-wrap:wrap">
+          <div class="help">Backend endpoints: /prices, /trades, /balance, /ai_decision • Binance comparison</div>
+          <div class="help">Read-only dashboard</div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // Configuration: set once, persisted in localStorage.
+      const apiInput = document.getElementById('api-base');
+      const saveBtn = document.getElementById('save-api');
+      const statusPill = document.getElementById('status-pill');
+
+      const API_BASE = (localStorage.getItem('API_BASE') || 'http://localhost:8000').replace(/\/+$/, '');
+      apiInput.value = API_BASE;
+
+      saveBtn.addEventListener('click', () => {
+        const v = apiInput.value.trim().replace(/\/+$/, '');
+        localStorage.setItem('API_BASE', v);
+        status('Saved. Using ' + v, true);
+        pollAll(true);
+      });
+
+      function status(text, good=false){
+        statusPill.textContent = text;
+        statusPill.className = 'pill ' + (good ? 'success' : '');
+      }
+
+      /////////yahan sa change kia ha ////////
+      document.getElementById("analyzeAllBtn").addEventListener("click", async () => {
+        const input = document.getElementById("input-symbol");
+        const symbolsText = input.value.trim();
+
+        if (!symbolsText) {
+          alert("⚠️ Please enter one or more symbols (comma separated) in the box above.");
+          return;
+        }
+
+        const symbols = symbolsText.split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+
+        const runMsg = document.getElementById("run-msg");
+        const runResult = document.getElementById("run-result");
+        runMsg.textContent = "⏳ Analyzing all symbols...";
+        runResult.textContent = "";
+        
+        try {
+          const res = await fetch("http://127.0.0.1:8000/analyze_all", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symbols }),
+          });
+
+          const data = await res.json();
+
+          if (!data.ok) {
+            runMsg.textContent = "❌ Error: " + data.error;
+            return;
+          }
+
+          let output = "✅ Analysis Complete:\n\n";
+          const buySymbols = [];
+
+          for (const [sym, result] of Object.entries(data.results)) {
+            const decision = result.decision || "N/A";
+            const conf = result.confidence ? `${result.confidence}%` : "";
+            const reason = result.reason || "";
+            output += `${sym}: ${decision} ${conf} ${reason}\n`;
+
+            // Auto-trade on BUY signals
+            if (decision.toUpperCase() === "BUY") {
+              buySymbols.push(sym);
+              try {
+                const tradeRes = await fetch("http://127.0.0.1:8000/start_trade", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ symbol: sym }),
+                });
+                const tradeData = await tradeRes.json();
+                output += `🚀 Auto-trade started for ${sym}: ${tradeData.ok ? "OK" : "FAILED"}\n`;
+              } catch (err) {
+                output += `⚠️ Failed to start trade for ${sym}: ${err}\n`;
+              }
+            }
+          }
+
+          runMsg.textContent = "✅ Done!";
+          runResult.textContent = output;
+
+        } catch (err) {
+          console.error("❌ analyzeAll error:", err);
+          runMsg.textContent = "❌ Failed to analyze all symbols. Check console.";
+        }
+      });
+
+////////////////yahan tak change kia ha
+
+      // State
+      const state = {
+        prices: {},
+        binance: {},
+        trades: [],
+        balance: 0,
+        ai: {},
+        history: new Map(),
+        last: { prices: 0, trades: 0, balance: 0, ai: 0 }
+      };
+
+      const $prices = document.getElementById('prices');
+      const $tradesBody = document.getElementById('trades-body');
+      const $balance = document.getElementById('balance');
+      const $ai = document.getElementById('ai');
+      
+      const notifRoot = document.createElement('div');
+      notifRoot.id = 'notif-root';
+      document.body.appendChild(notifRoot);
+
+      const $tsPrices = document.getElementById('ts-prices');
+      const $tsTrades = document.getElementById('ts-trades');
+      const $tsBalance = document.getElementById('ts-balance');
+      const $tsAi = document.getElementById('ts-ai');
+      const $openCount = document.getElementById('open-count');
+
+      function fmtMoney(n){ return (n ?? 0).toLocaleString(undefined, {style:'currency', currency:'USD', maximumFractionDigits: 2}); }
+      function fmtNum(n){
+        return (n ?? 0).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function nowTs(){ return new Date().toLocaleTimeString(); }
+
+      async function getJSON(url){
+        const r = await fetch(url, {cache:'no-store'});
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return await r.json();
+      }
+
+      async function fetchBackend(){
+        const base = (localStorage.getItem('API_BASE') || API_BASE);
+        try {
+          const [prices, trades, balance] = await Promise.all([
+            getJSON(base + '/prices'),
+            getJSON(base + '/trades'),
+            getJSON(base + '/balance'),
+          ]);
+
+          const nextPrices = prices || {};
+          const nextTrades = Array.isArray(trades) ? trades : [];
+          const nextBalance = typeof balance === 'object' ? (balance.balance ?? 0) : 0;
+
+          try{
+            const prev = (state.trades || []).map(t => `${t.symbol || ''}|${t.entry||''}`);
+            const cur = nextTrades.map(t => `${t.symbol || ''}|${t.entry||''}`);
+            cur.forEach(k => { if(!prev.includes(k)){ const [s] = k.split('|'); toast('Trade opened: ' + s, 'info', 4000); } });
+            prev.forEach(k => { if(!cur.includes(k)){ const [s] = k.split('|'); toast('Trade closed: ' + s, 'info', 4000); } });
+          }catch(e){}
+
+          state.prices = nextPrices;
+          state.trades = nextTrades;
+          state.balance = nextBalance;
+
+          let aiResp = null;
+          try { aiResp = await getJSON(base + '/ai_decision'); }
+          catch { try { aiResp = await getJSON(base + '/ai_decisions'); } catch(_){} }
+          const newAi = aiResp || {};
+          try{
+            const prevAi = state.ai || {};
+            Object.keys(newAi).forEach(k => {
+              try{
+                const newVal = newAi[k];
+                const oldVal = prevAi[k];
+                const newParsed = (newVal && typeof newVal === 'object' && newVal.parsed) ? newVal.parsed : (typeof newVal === 'object' ? newVal : null);
+                const oldParsed = (oldVal && typeof oldVal === 'object' && oldVal.parsed) ? oldVal.parsed : (typeof oldVal === 'object' ? oldVal : null);
+                if(!oldParsed && newParsed){
+                  const d = (newParsed.decision || '').toString().toUpperCase();
+                  const c = Number(newParsed.confidence || newParsed.conf || 0);
+                  toast(`AI: ${k.toUpperCase()} — ${d}${isFinite(c) && c ? ' ('+c+'%)' : ''}`,'info',5000);
+                } else if(oldParsed && newParsed){
+                  const d1 = (oldParsed.decision||'').toString().toUpperCase();
+                  const d2 = (newParsed.decision||'').toString().toUpperCase();
+                  const c1 = Number(oldParsed.confidence || oldParsed.conf || 0);
+                  const c2 = Number(newParsed.confidence || newParsed.conf || 0);
+                  if(d1 !== d2 || Math.abs(c2 - c1) >= 5){
+                    toast(`AI update: ${k.toUpperCase()} — ${d2}${isFinite(c2) && c2 ? ' ('+c2+'%)' : ''}`,'info',5000);
+                  }
+                }
+              }catch(e){}
+            });
+            Object.keys(prevAi).forEach(k => { if(!(k in newAi)){ toast(`AI cleared: ${k.toUpperCase()}`,'info',4000); } });
+          }catch(e){}
+          state.ai = newAi;
+
+          state.last.prices = Date.now();
+          state.last.trades = Date.now();
+          state.last.balance = Date.now();
+          state.last.ai = Date.now();
+
+          status('Connected', true);
+        } catch (e){
+          status('Backend error: ' + e.message, false);
+        }
+      }
+
+      function collectSymbols(){
+        const set = new Set();
+        Object.keys(state.prices || {}).forEach(k => set.add(k.toUpperCase()));
+        state.trades.forEach(t => t?.symbol && set.add(String(t.symbol).toUpperCase()));
+        return Array.from(set);
+      }
+
+      async function fetchBinance(){
+        const syms = collectSymbols();
+        if(syms.length === 0) return;
+        const results = {};
+        const chunks = [];
+        for(let i=0;i<syms.length;i+=12) chunks.push(syms.slice(i,i+12));
+        for(const chunk of chunks){
+          await Promise.all(chunk.map(async sym=>{
+            try{
+              const r = await getJSON('https://api.binance.com/api/v3/ticker/price?symbol=' + encodeURIComponent(sym));
+              results[sym] = Number(r.price);
+            }catch(_){}
+          }));
+        }
+        state.binance = results;
+      }
+
+      function upsertHistory(symbol, price){
+        if(!price || !isFinite(price)) return;
+        const key = symbol.toUpperCase();
+        const arr = state.history.get(key) || [];
+        arr.push(Number(price));
+        if(arr.length > 60) arr.shift();
+        state.history.set(key, arr);
+      }
+
+      function renderPrices(){
+        $prices.innerHTML = '';
+        const entries = Object.entries(state.prices || {});
+        entries.sort((a,b)=>a[0].localeCompare(b[0]));
+        for(const [rawSym, p] of entries){
+          const sym = rawSym.toUpperCase();
+          const backendPrice = Number(p);
+          const binancePrice = state.binance[sym];
+          upsertHistory(sym, backendPrice);
+
+          const row = document.createElement('div');
+          row.className = 'row';
+          const diff = (binancePrice && backendPrice) ? (backendPrice - binancePrice) : 0;
+          const diffPct = (binancePrice && backendPrice) ? ((backendPrice - binancePrice) / binancePrice * 100) : 0;
+
+          row.innerHTML = `
+            <div class="ticker mono">${sym}</div>
+            <div class="mono">${fmtNum(backendPrice)} <span class="muted">backend</span></div>
+            <div class="mono">${binancePrice ? fmtNum(binancePrice) : '—'} <span class="muted">binance</span></div>
+            <div class="mono ${diff >=0 ? 'diff-pos' : 'diff-neg'}">${diff ? diffPct.toFixed(2) + '%' : '—'}</div>
+          `;
+
+          const mini = document.createElement('canvas');
+          mini.className = 'mini';
+          mini.width = 300;
+          mini.height = 40;
+          row.appendChild(mini);
+          $prices.appendChild(row);
+
+          drawSparkline(mini, state.history.get(sym) || [], diff >= 0 ? getComputedStyle(document.documentElement).getPropertyValue('--pos').trim() : getComputedStyle(document.documentElement).getPropertyValue('--neg').trim());
+        }
+        $tsPrices.textContent = 'Last update: ' + nowTs();
+      }
+
+      function renderTrades(){
+      $tradesBody.innerHTML = '';
+      let openCount = 0;
+      for(const t of state.trades){
+        // Count open trades properly using status field
+        if(t?.status === 'OPEN') openCount++;
+        
+        const sym = String(t.symbol || '').toUpperCase();
+        const side = String(t.side || '').toUpperCase();
+        const entry = Number(t.entry || 0);
+        const target = Number(t.target || 0);  // Use target directly from DB
+        const stop_loss = Number(t.stop_loss || 0);  // Use stop_loss directly from DB
+        const amount = Number(t.amount || 1000);  // Default to $1000 if not set
+        
+        // Get latest price with fallbacks and debug output
+        let price = null;
+        if (sym in state.prices) {
+            price = Number(state.prices[sym]);
+            console.log(`${sym}: Using backend price ${price}`);
+        } else if (sym.toLowerCase() in state.prices) {
+            price = Number(state.prices[sym.toLowerCase()]);
+            console.log(`${sym}: Using lowercase backend price ${price}`);
+        } else if (sym in state.binance) {
+            price = Number(state.binance[sym]);
+            console.log(`${sym}: Using Binance price ${price}`);
+        } else {
+            console.log(`${sym}: No price available`);
+        }
+        
+        // Calculate P/L only if we have a valid price
+        const units = entry > 0 ? (amount / entry) : 0;
+        const pl = (price != null && entry) ? (price - entry) * units * (side === 'SELL' ? -1 : 1) : null;
+        const plPct = (price != null && entry) ? ((price - entry) / entry) * (side === 'SELL' ? -100 : 100) : null;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="mono" data-label="Symbol">${sym || '-'}</td>
+          <td data-label="Side"><span class="badge ${side === 'SELL' ? 'sell' : 'buy'}">${side || '-'}</span></td>
+          <td class="mono" data-label="Entry">${entry ? formatPrice(entry) : '-'}</td>
+          <td class="mono" data-label="Target">${target ? formatPrice(target) : '-'}</td>
+          <td class="mono" data-label="Stop Loss">${stop_loss ? formatPrice(stop_loss) : '-'}</td>
+          <td class="mono" data-label="Amount">${amount ? fmtMoney(amount) : '-'}</td>
+          <td class="mono" data-label="Price">${price ? formatPrice(price) : '—'}</td>
+          <td class="mono" data-label="P/L" style="color:${pl >= 0 ? 'var(--pos)' : 'var(--neg)'}">${fmtMoney(pl)}</td>
+          <td class="mono" data-label="P/L %"
+              style="color:${plPct >= 0 ? 'var(--pos)' : 'var(--neg)'}">${isFinite(plPct) ? plPct.toFixed(2)+'%' : '—'}</td>
+          <td class="mono" data-label="Status">${t.status || 'UNKNOWN'}</td>
+        `;
+        $tradesBody.appendChild(tr);
+      }
+      $openCount.textContent = openCount + ' open';
+      $tsTrades.textContent = 'Last update: ' + nowTs();
+    }
+
+      function renderBalance(){
+        $balance.textContent = fmtMoney(state.balance || 0);
+        $tsBalance.textContent = 'Last update: ' + nowTs();
+      }
+
+      function renderAI() {
+        const data = state.ai;
+        $ai.innerHTML = '';
+
+        if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+          $ai.innerHTML = '<div class="muted">No decisions yet.</div>';
+        } else if (typeof data === 'string') {
+          const d = document.createElement('div'); 
+          d.textContent = data;
+          $ai.appendChild(d);
+        } else {
+          Object.entries(data).forEach(([symbol, aiData]) => {
+            const symDiv = document.createElement('div');
+            symDiv.classList.add('ai-symbol-block');
+            symDiv.innerHTML = `<h4 style="margin:4px 0;color:#0af;">${symbol.toUpperCase()}</h4>`;
+
+            // Handle string or object response
+            if (typeof aiData === 'string') {
+              symDiv.innerHTML += `<div>${aiData}</div>`;
+            } else {
+              // Try to get the summary from different possible structures
+              let summary;
+              if (aiData.summary && aiData.summary.parsed) {
+                summary = aiData.summary.parsed;
+              } else if (aiData.parsed) {
+                summary = aiData.parsed;
+              } else if (typeof aiData === 'object') {
+                summary = aiData;
+              }
+
+              if (summary) {
+                const decision = (summary.decision || 'HOLD').toUpperCase();
+                const confidence = summary.confidence || 0;
+                const reason = summary.reason || 'No reason provided';
+                const tag = decision === 'BUY' ? 'buy' : decision === 'SELL' ? 'sell' : '';
+
+                symDiv.innerHTML += `
+                  <div style="margin-top:6px;padding:6px 10px;border-radius:8px;background:#1e293b;">
+                    <b>🧠 AI Decision:</b> 
+                    <span class="badge ${tag}">${decision}</span>
+                    <span style="opacity:0.7">(${Number(confidence).toFixed(1)}%)</span><br>
+                    🎯 Reason: ${reason}
+                  </div>`;
+              }
+
+              // If there's trend info, show it
+              if (aiData.summary && aiData.summary.trend_summary) {
+                symDiv.innerHTML += `
+                  <div style="margin-top:4px;font-size:12px;color:var(--muted);">
+                    📊 ${aiData.summary.trend_summary}
+                  </div>`;
+              }
+            }
+            $ai.appendChild(symDiv);
+          });
+        }
+
+        $tsAi.textContent = 'Last update: ' + nowTs();
+      }
+
+
+      function drawSparkline(canvas, data, stroke='#10b981'){
+        const ctx = canvas.getContext('2d', {alpha:false});
+        ctx.fillStyle = 'rgba(11,17,23,0.6)';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        if(!data || data.length < 2){ return; }
+
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        const pad = 4;
+        const w = canvas.width - pad*2;
+        const h = canvas.height - pad*2;
+        const n = data.length;
+
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+
+        for(let i=0;i<n;i++){
+          const x = pad + (i/(n-1))*w;
+          const y = pad + (max === min ? h/2 : h - ((data[i]-min)/(max-min))*h);
+          if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad, canvas.height-pad);
+        ctx.lineTo(canvas.width-pad, canvas.height-pad);
+        ctx.stroke();
+      }
+
+      function renderAll(){
+        renderPrices();
+        renderTrades();
+        renderBalance();
+        renderAI();
+      }
+
+      function toast(msg, kind='info', timeout=4000){
+        const el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = `
+          background: ${kind === 'error' ? 'linear-gradient(135deg, rgba(244,63,94,0.95), rgba(220,38,38,0.95))' : 'linear-gradient(135deg, rgba(18,23,29,0.98), rgba(30,41,59,0.98))'};
+          color: #fff;
+          padding: 12px 18px;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+          font-size: 13px;
+          font-weight: 600;
+          border: 1px solid ${kind === 'error' ? 'rgba(244,63,94,0.4)' : 'rgba(251,191,36,0.3)'};
+          backdrop-filter: blur(12px);
+          animation: slideIn 0.3s ease;
+        `;
+        notifRoot.appendChild(el);
+        setTimeout(()=>{ 
+          el.style.opacity = '0'; 
+          el.style.transform = 'translateX(20px)';
+          el.style.transition = 'all 0.3s ease';
+          setTimeout(()=> el.remove(), 350); 
+        }, timeout);
+      }
+
+      // Separate price updates from other updates
+      async function updatePrices() {
+        await fetchBinance();
+        renderPrices();
+        renderTrades();  // Re-render trades to update prices
+      }
+
+      async function pollAll(force=false){
+        await fetchBackend();
+        await fetchBinance();
+        renderAll();
+      }
+
+      // Initial load
+      pollAll(true);
+
+      // More frequent price updates (every 2 seconds)
+      setInterval(updatePrices, 2000);
+      
+      // Full refresh less frequently (every 5 seconds)
+      setInterval(pollAll, 5000);
+
+      const inputSymbol = document.getElementById('input-symbol');
+      const btnAnalyze = document.getElementById('btn-analyze');
+      const btnStartTrade = document.getElementById('btn-start-trade');
+      const runMsg = document.getElementById('run-msg');
+      const runResult = document.getElementById('run-result');
+
+      btnStartTrade.disabled = false;
+
+      // Add event listener for the Live Signals button
+      document.getElementById("fetchLiveSignalsBtn").addEventListener("click", async () => {
+        const button = document.getElementById("fetchLiveSignalsBtn");
+        const runMsg = document.getElementById("run-msg");
+        const runResult = document.getElementById("run-result");
+        
+        try {
+          // Disable button and show loading state
+          button.disabled = true;
+          runMsg.textContent = "⏳ Fetching live signals...";
+          runResult.textContent = "";
+          
+          // Fetch signals from your backend endpoint
+          const base = (localStorage.getItem('API_BASE') || API_BASE);
+          const response = await fetch(`${base}/live_signals`);
+          const data = await response.json();
+          
+          if (!data.ok) {
+            runMsg.textContent = "❌ Error fetching signals";
+            runResult.textContent = data.error || "Unknown error";
+            return;
+          }
+          
+          // Process results
+          let output = "✅ Live Signals Results:\n\n";
+          let tradedCount = 0;
+          
+          if (data.results && Array.isArray(data.results)) {
+            for (const result of data.results) {
+              const symbol = result.symbol;
+              const decision = result.decision;
+              const confidence = result.confidence;
+              
+              output += `${symbol}: ${decision}${confidence ? ` (${confidence}%)` : ""}\n`;
+              if (result.trade_started) {
+                output += `🚀 Paper trade started automatically!\n`;
+                tradedCount++;
+              }
+              if (result.reason) {
+                output += `Reason: ${result.reason}\n`;
+              }
+              output += "\n";
+            }
+            
+            output += `\n📊 Summary:\n`;
+            output += `Total signals processed: ${data.results.length}\n`;
+            output += `Trades started: ${tradedCount}`;
+            
+            runMsg.textContent = `✅ Processed ${data.results.length} signals`;
+          } else {
+            output += "No signals found or invalid response format.";
+            runMsg.textContent = "⚠️ No valid signals found";
+          }
+          
+          runResult.textContent = output;
+          
+          // Refresh the UI to show any new trades
+          await pollAll(true);
+          
+        } catch (error) {
+          console.error("Failed to fetch live signals:", error);
+          runMsg.textContent = "❌ Error";
+          runResult.textContent = `Failed to fetch signals: ${error.message}`;
+        } finally {
+          button.disabled = false;
+          setTimeout(() => runMsg.textContent = "", 5000);
+        }
+      });
+
+      async function postJSON(url, body){
+        const base = (localStorage.getItem('API_BASE') || API_BASE);
+        const r = await fetch(base + url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        const j = await r.json().catch(()=>({ ok: false, error: 'Invalid JSON response' }));
+        return { status: r.status, ok: j.ok ?? (r.ok), body: j };
+      }
+
+      async function ensureSubscribed(symbol){
+        try{
+          await postJSON('/subscribe_symbol', { symbol });
+        }catch(_){}
+      }
+      
+      btnAnalyze.addEventListener('click', async () => {
+        const symbol = (inputSymbol.value || '').trim().toUpperCase();
+        if(!symbol){ runMsg.textContent = 'Enter a symbol'; return; }
+
+        btnAnalyze.disabled = true; runMsg.textContent = 'Analyzing…'; runResult.textContent = '';
+        try{
+          await ensureSubscribed(symbol);
+          const res = await postJSON('/start_paper_trade', { symbol });
+          if(res.ok){
+            runMsg.textContent = 'AI ready';
+            const dec = res.body.decision ?? res.body;
+            runResult.textContent = 'Decision: ' + JSON.stringify(dec, null, 2) + '\n\nTrade: ' + (res.body.trade ? JSON.stringify(res.body.trade, null, 2) : 'none');
+            await pollAll(true);
+          } else {
+            runMsg.textContent = 'Error';
+            runResult.textContent = res.body?.error || ('HTTP ' + res.status);
+          }
+        }catch(e){
+          runMsg.textContent = 'Network error'; runResult.textContent = e.message;
+        } finally { btnAnalyze.disabled = false; setTimeout(()=> runMsg.textContent = '', 3000); }
+      });
+
+      btnStartTrade.addEventListener('click', async () => {
+        const symbol = (inputSymbol.value || '').trim().toUpperCase();
+        if(!symbol){ runMsg.textContent = 'Enter a symbol'; return; }
+
+        btnStartTrade.disabled = true; runMsg.textContent = 'Starting trade…';
+        try{
+          await ensureSubscribed(symbol);
+          const res = await postJSON('/start_trade', { symbol });
+          if(res.ok){
+            runMsg.textContent = 'Trade started';
+            runResult.textContent = JSON.stringify(res.body, null, 2);
+            await pollAll(true);
+          } else {
+            runMsg.textContent = 'Error';
+            runResult.textContent = res.body?.error || ('HTTP ' + res.status);
+          }
+        }catch(e){
+          runMsg.textContent = 'Network error'; runResult.textContent = e.message;
+        } finally { btnStartTrade.disabled = false; setTimeout(()=> runMsg.textContent = '', 3000); }
+      });
+      
+      // Add slide-in animation
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+      `;
+      document.head.appendChild(style);
+      
+        //yahan sa change kia end script tak
+      const API_URL = "http://127.0.0.1:8000/trade_history"; // ✅ Your working backend URL
+      
+      // ADD THIS FUNCTION HERE (right before loadTradeHistory)
+      function formatPrice(price) {
+        if (typeof price !== 'number' || isNaN(price)) return '-';
+        if (price < 0.01) return price.toFixed(6);  // For very low prices like 0.004xxx
+        if (price < 1) return price.toFixed(4);     // For low prices like 0.117x
+        if (price < 10) return price.toFixed(3);    // For mid-range like 1-9.xxx
+        return price.toFixed(2);                    // For higher like 14.xx or 390.xx
+      }
+
+
+
+
+      async function loadTradeHistory() {
+        try {
+          const res = await fetch(API_URL);
+          const data = await res.json();
+
+          if (!data.ok) {
+            console.error("❌ Backend error:", data.error);
+            return;
+          }
+
+          const trades = data.history;
+          const tbody = document.getElementById("trade-rows");
+          tbody.innerHTML = "";
+
+          if (!trades.length) {
+            tbody.innerHTML = `<tr><td colspan="8">No trades yet</td></tr>`;
+            document.getElementById("trade-summary").innerText = "No trades yet.";
+            return;
+          }
+
+          // ✅ Calculate stats dynamically (no hardcoded starting balance)
+          // ---------- Robust stats calculation (replace older block) ----------
+          let wins = 0, losses = 0, breakevens = 0;
+          let totalPnL = 0;
+          let closedTrades = 0;
+          let unresolvedCount = 0;
+
+          // sum up PnL and count outcomes robustly
+          trades.forEach(t => {
+            // Normalize outcome safely
+            const outcomeRaw = t.outcome ?? "";
+            const outcome = String(outcomeRaw).toUpperCase().trim();
+
+            // Consider a trade "closed" if closed_at exists (non-empty)
+            const isClosed = !!t.closed_at;
+
+            if (isClosed) {
+              closedTrades++;
+              // Count outcomes only for closed trades
+              if (outcome === "WIN") wins++;
+              else if (outcome === "LOSS") losses++;
+              else if (outcome === "BREAKEVEN" || outcome === "TIE" || outcome === "DRAW") breakevens++;
+              else {
+                // closed but no recognized outcome
+                unresolvedCount++;
+              }
+
+              // Sum PnL for closed trades only (ignore open trades with null pnl)
+              const pnl = Number(t.pnl);
+              if (!Number.isNaN(pnl)) totalPnL += pnl;
+            } else {
+              // still open / unresolved
+              unresolvedCount++;
+            }
+          });
+
+          const total = trades.length;
+          const openTrades = total - closedTrades;
+
+          // fetch dynamic balance (assumes your /balance returns JSON with `balance`
+          // and optionally `starting_balance`. if not present, fallback used)
+          let currentBalance = 0;
+          let startingBalance = null;
+          try {
+            const balanceRes = await fetch("http://127.0.0.1:8000/balance");
+            const balanceData = await balanceRes.json();
+            currentBalance = Number(balanceData.balance || 0);
+            startingBalance = balanceData.starting_balance !== undefined ? Number(balanceData.starting_balance) : null;
+          } catch (e) {
+            console.warn("Could not fetch balance:", e);
+          }
+
+          // If startingBalance not provided by backend, estimate it as currentBalance - totalPnL
+          if (!startingBalance && Number.isFinite(currentBalance)) {
+            startingBalance = currentBalance - totalPnL;
+          }
+
+          // Compute PnL% (based on startingBalance if available)
+          const pnlPercent = (startingBalance && startingBalance !== 0)
+            ? (((totalPnL) / startingBalance) * 100)
+            : 0;
+
+          // Display stats
+          document.getElementById("trade-summary").innerHTML = `
+            <b>📈 Trade Stats:</b>
+            🟢 Wins: <span style="color:lime;">${wins}</span> |
+            🔴 Losses: <span style="color:red;">${losses}</span> |
+            🟡 Breakeven: <span style="color:gold;">${breakevens}</span> |
+            📊 Total Trades: ${total} |
+            🟦 Closed: ${closedTrades} |
+            🟠 Open/Unresolved: ${openTrades} |
+            💰 Total PnL: <span style="color:${totalPnL >= 0 ? 'lime' : 'red'};">${totalPnL.toFixed(6)}</span> |
+            📈 PnL %: <span style="color:${pnlPercent >= 0 ? 'lime' : 'red'};">${pnlPercent.toFixed(2)}%</span>
+          `;
+
+          // debug: list a few unresolved trades to help backend debugging
+          if (unresolvedCount > 0) {
+            const unresolvedExamples = trades.filter(t => {
+              const isClosed = !!t.closed_at;
+              const outcome = String(t.outcome ?? "").toUpperCase().trim();
+              return !isClosed || (isClosed && !["WIN","LOSS","BREAKEVEN","TIE","DRAW"].includes(outcome));
+            }).slice(0,6).map(t => `${t.symbol || "?"} outcome='${t.outcome}' closed_at='${t.closed_at}' pnl='${t.pnl}'`);
+            console.info("Unresolved trades (examples):", unresolvedExamples);
+          }
+
+
+
+          // ✅ Populate table
+          trades.forEach(t => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${t.symbol}</td>
+            <td>${t.side}</td>
+            <td>${formatPrice(Number(t.entry))}</td>
+            <td>${t.target ? formatPrice(Number(t.target)) : "-"}</td>
+            <td>${t.stop_loss ? formatPrice(Number(t.stop_loss)) : "-"}</td>
+            <td>${t.exit_price ? formatPrice(Number(t.exit_price)) : "-"}</td>
+            <td style="color:${t.pnl >= 0 ? 'lime' : 'red'}">${t.pnl != null ? formatPrice(Number(t.pnl)) : "-"}</td>
+            <td>${t.fees ? '$' + Number(t.fees).toFixed(4) : "-"}</td>
+            <td>${t.status || (t.closed_at ? "CLOSED" : "OPEN")}</td>
+            <td>${t.opened_at ? new Date(t.opened_at).toLocaleString() : "-"}</td>
+            <td>${t.closed_at ? new Date(t.closed_at).toLocaleString() : "-"}</td>
+          `;
+          tbody.appendChild(row);
+        });
+        } catch (err) {
+          console.error("⚠️ Failed to load trade history:", err);
+        }
+      }
+
+      // ✅ Load on startup
+      loadTradeHistory();
+
+      // 🔁 Auto-refresh every 15 seconds
+      setInterval(loadTradeHistory, 15000);
+    </script>
+
+    <section id="trade-history" style="margin-top:20px;">
+      <h2>📊 Trade History</h2>
+      
+      <!-- ✅ Stats will show here -->
+      <div id="trade-summary" style="margin-bottom:10px; font-weight:bold;"></div>
+
+      <table border="1" width="100%" style="margin-top:10px; border-collapse:collapse;">
+        <thead>
+          <tr style="background:#222; color:white;">
+          <th>Symbol</th>
+          <th>Side</th>
+          <th>Entry</th>
+          <th>Target</th>
+          <th>Stop Loss</th>
+          <th>Exit</th>
+          <th>PNL</th>
+          <th>Fees</th>
+          <th>Status</th>
+          <th>Opened</th>
+          <th>Closed</th>
+        </tr>
+
+        </thead>
+        <tbody id="trade-rows"></tbody>
+      </table>
+    </section>
+  </body>
+</html>
