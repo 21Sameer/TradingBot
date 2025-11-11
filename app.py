@@ -10,7 +10,6 @@ from fastapi_backend_v2 import app  # Updated to v2
 from db import init_db
 from paper_trading_engine import ai_worker
 from paper_trading_engine import PaperTradingEngineSingleton
-import os
 pte = PaperTradingEngineSingleton.get_instance()
 
 
@@ -158,38 +157,33 @@ def start_all():
         print(f"❌ Error in start_all: {e}")
         return False
 
-    def _ai_loop():
-        while True:
-            try:
-                tracked = websocket_fetcher.get_tracked_symbols()
-                if not tracked:
-                    time.sleep(10)
-                    continue
-
-                async def process_symbols():
-                    for symbol in tracked:
-                        try:
-                            df = get_recent_candles(symbol, interval="1m", limit=1000)
-                            df = sanitize_dataframe_timestamps(df)  # 🧹 Clean timestamps globally
-                            await ai_trade(symbol, df)  # Await the async call
-                        except Exception as e:
-                            print(f"⚠️ AI loop per-symbol error for {symbol}: {e}")
-
-                # Run the async function in an event loop
-                asyncio.run(process_symbols())
-
-                # ⏱️ Run every 60 seconds
-                time.sleep(60)
-
-            except Exception as e:
-                print("⚠️ AI loop error:", e)
-                time.sleep(10)
-
-    # Start the thread
-    threading.Thread(target=_ai_loop, daemon=True, name="ai-loop").start()
-
 # ------------------------------------------------------------
+# ============================================================
+# 🔹 Configure static file serving (BEFORE main())
+# ============================================================
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+# Path to your public folder
+public_dir = os.path.join(os.path.dirname(__file__), "public")
+
+# Serve index.html at root "/"
+@app.get("/", include_in_schema=False)
+def root():
+    """Serve the frontend at the root path."""
+    return FileResponse(os.path.join(public_dir, "index.html"), media_type="text/html")
+
+# Serve static files from /static (CSS, JS, etc.)
+if os.path.exists(public_dir):
+    app.mount("/static", StaticFiles(directory=public_dir), name="static")
+    print(f"✅ Static files mounted from {public_dir}")
+else:
+    print(f"⚠️ Public directory not found: {public_dir}")
+
+# ============================================================
 # 🔹 Entry point
+# ============================================================
 # ------------------------------------------------------------
 
 
@@ -204,17 +198,13 @@ def main():
             return
             
         print("✅ Background systems started successfully")
-        print("🌐 Starting FastAPI server on http://127.0.0.1:8000")
-
-        # Use the port Railway provides, default to 8000 if running locally
-        PORT = int(os.environ.get("PORT", 8080))
-
+        print("🌐 Starting FastAPI server on http://127.0.0.1:8080")
         
         # Run the FastAPI application
         uvicorn.run(
             app,
-            host="0.0.0.0",
-            port=PORT,
+            host="127.0.0.1",
+            port=8080,
             reload=False,
             access_log=False,
             log_level="info",
@@ -227,7 +217,24 @@ def main():
         print(f"❌ Fatal error: {str(e)}")
         raise
 
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+# Path to your public folder
+public_dir = os.path.join(os.path.dirname(__file__), "public")
+
+# Serve static files
+app.mount("/public", StaticFiles(directory=public_dir), name="public")
+
+# Serve index.html at root
+@app.get("/")
+def root():
+    return FileResponse(os.path.join(public_dir, "index.html"))
+
+
+
+
 if __name__ == "__main__":
     main()
-
-
