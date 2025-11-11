@@ -198,13 +198,19 @@ def main():
             return
             
         print("✅ Background systems started successfully")
-        print("🌐 Starting FastAPI server on http://127.0.0.1:8080")
+        
+        # Get port from environment (Railway sets $PORT) or default to 8080
+        import os
+        port = int(os.getenv('PORT', 8080))
+        host = "0.0.0.0"  # Listen on all interfaces for Railway/production
+        
+        print(f"🌐 Starting FastAPI server on {host}:{port}")
         
         # Run the FastAPI application
         uvicorn.run(
             app,
-            host="127.0.0.1",
-            port=8080,
+            host=host,
+            port=port,
             reload=False,
             access_log=False,
             log_level="info",
