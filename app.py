@@ -10,6 +10,7 @@ from fastapi_backend_v2 import app  # Updated to v2
 from db import init_db
 from paper_trading_engine import ai_worker
 from paper_trading_engine import PaperTradingEngineSingleton
+import os
 pte = PaperTradingEngineSingleton.get_instance()
 
 
