@@ -739,7 +739,16 @@
       const saveBtn = document.getElementById('save-api');
       const statusPill = document.getElementById('status-pill');
 
-      const API_BASE = (localStorage.getItem('API_BASE') || 'http://127.0.0.1:8080').replace(/\/+$/, '');
+      // Smart API base detection: use current domain on production, localhost for dev
+      const getDefaultAPI = () => {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          return 'http://127.0.0.1:8080';
+        }
+        // On production (Railway/cloud), use current domain
+        return window.location.origin;
+      };
+      
+      const API_BASE = (localStorage.getItem('API_BASE') || getDefaultAPI()).replace(/\/+$/, '');
       apiInput.value = API_BASE;
 
       saveBtn.addEventListener('click', () => {
@@ -772,7 +781,7 @@
         runResult.textContent = "";
         
         try {
-          const res = await fetch("http://127.0.0.1:8080/analyze_all", {
+          const res = await fetch(`${API_BASE}/analyze_all`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ symbols }),
@@ -798,7 +807,7 @@
             if (decision.toUpperCase() === "BUY") {
               buySymbols.push(sym);
               try {
-                const tradeRes = await fetch("http://127.0.0.1:8080/start_trade", {
+                const tradeRes = await fetch(`${API_BASE}/start_trade`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ symbol: sym }),
@@ -1348,7 +1357,7 @@
       document.head.appendChild(style);
       
         //yahan sa change kia end script tak
-      const API_URL = "http://127.0.0.1:8080/trade_history"; // ✅ Your working backend URL
+      const API_URL = `${API_BASE}/trade_history`; // ✅ Dynamically uses API_BASE
       
       // ADD THIS FUNCTION HERE (right before loadTradeHistory)
       function formatPrice(price) {
@@ -1426,7 +1435,7 @@
           let currentBalance = 0;
           let startingBalance = null;
           try {
-            const balanceRes = await fetch("http://127.0.0.1:8080/balance");
+            const balanceRes = await fetch(`${API_BASE}/balance`);
             const balanceData = await balanceRes.json();
             currentBalance = Number(balanceData.balance || 0);
             startingBalance = balanceData.starting_balance !== undefined ? Number(balanceData.starting_balance) : null;
