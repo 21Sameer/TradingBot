@@ -3,9 +3,13 @@ from sqlalchemy import create_engine, Column, String, Float, DateTime, Integer, 
 from sqlalchemy.dialects.postgresql import JSONB # type: ignore
 from datetime import datetime,timezone
 import psycopg2 # type: ignore
+import os
+from dotenv import load_dotenv
 
-# --- CONFIG ---
-DB_URL = "postgresql://neondb_owner:npg_VHRrdlZ9ngO2@ep-icy-leaf-afjwtqdg-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+load_dotenv()
+
+DB_URL = os.getenv("DB_URL")
+
 
 engine = create_engine(
     DB_URL,
