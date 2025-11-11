@@ -1,9 +1,12 @@
 # config.py
 
 
+import os
+from dotenv import load_dotenv
 
-# Groq AI API
-GROQ_API_KEY = "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"
+load_dotenv()  # Loads variables from .env file
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Trading settings
 DEFAULT_BALANCE = 10000  # Virtual starting balance
