@@ -204,12 +204,16 @@ def main():
             
         print("✅ Background systems started successfully")
         print("🌐 Starting FastAPI server on http://127.0.0.1:8000")
+
+        # Use the port Railway provides, default to 8000 if running locally
+        PORT = int(os.environ.get("PORT", 8080))
+
         
         # Run the FastAPI application
         uvicorn.run(
             app,
-            host="127.0.0.1",
-            port=8080,
+            host="0.0.0.0",
+            port=PORT,
             reload=False,
             access_log=False,
             log_level="info",
