@@ -739,10 +739,21 @@
       const saveBtn = document.getElementById('save-api');
       const statusPill = document.getElementById('status-pill');
 
-      // Smart detection: works on Railway AND locally
-      // On Railway: window.location.origin = your Railway domain
-      // Locally: window.location.origin = http://localhost:3000 or http://127.0.0.1:8080
-      const API_BASE = (localStorage.getItem('API_BASE') || window.location.origin).replace(/\/+$/, '');
+      // Always use current domain (Railway OR local)
+      // Clear any old cached values from localStorage when not on localhost
+      const currentOrigin = window.location.origin;
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      let API_BASE;
+      if (isLocalhost) {
+        // Locally: use localStorage if set, otherwise use current origin
+        API_BASE = (localStorage.getItem('API_BASE') || currentOrigin).replace(/\/+$/, '');
+      } else {
+        // On Railway/Production: ALWAYS use current domain, ignore localStorage
+        API_BASE = currentOrigin.replace(/\/+$/, '');
+        localStorage.setItem('API_BASE', API_BASE);  // Update to new Railway domain
+      }
+      
       apiInput.value = API_BASE;
 
       saveBtn.addEventListener('click', () => {
