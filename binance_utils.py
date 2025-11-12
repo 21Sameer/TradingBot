@@ -79,8 +79,22 @@ def get_binance_symbols() -> List[str]:
 def filter_valid_binance_symbols(symbols: List[str]) -> List[str]:
     """
     Filter a list of symbols to only include valid Binance trading pairs.
+    If Binance API is not accessible (e.g., on Railway), accept all USDT symbols.
     """
     valid_symbols = get_binance_symbols()
+    
+    # If Binance API failed and no cache, accept all symbols ending with USDT
+    # This allows the app to work even when Binance API is blocked (e.g., Railway)
+    if not valid_symbols:
+        print(f"⚠️ Using fallback: Binance API unavailable, accepting all USDT symbols")
+        filtered = [
+            sym.upper() 
+            for sym in symbols 
+            if sym.upper().endswith('USDT')
+        ]
+        print(f"✅ Accepted {len(filtered)} symbols via fallback: {filtered}")
+        return filtered
+    
     valid_symbols_set = set(valid_symbols)
     
     # Filter and standardize symbols
